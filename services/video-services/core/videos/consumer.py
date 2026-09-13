@@ -20,11 +20,15 @@ def main():
         message = json.loads(body)
         video_id = message["video_id"]
         video_status = message["status"]
+        processed_video = message["processed_video"]
+        thumbnail = message["thumbnail"]
         
         print(f"status updated to {video_status}")
     
         video = Video.objects.get(id = video_id)
         video.status = video_status
+        video.processed_video = processed_video
+        video.thumbnail = thumbnail
         video.save()
         
         ch.basic_ack(delivery_tag = method.delivery_tag)

@@ -2,7 +2,7 @@ import pika, json
 
 
 
-def publish_video_status(video_id, video_status):
+def publish_video_status(video_id, video_status, processed_video, thumbnail):
     
     connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
     
@@ -13,6 +13,8 @@ def publish_video_status(video_id, video_status):
     message = {
         "video_id" : str(video_id),
         "status": str(video_status),
+        "processed_video": str(processed_video),
+        "thumbnail": str(thumbnail),
        
     }
 

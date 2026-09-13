@@ -27,6 +27,10 @@ class Video(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+
+    processed_video = models.FileField(null=True, blank=True)
+    thumbnail = models.ImageField(null=True, blank=False)
+    
     class Meta:
         ordering = ["-created_at"]
 

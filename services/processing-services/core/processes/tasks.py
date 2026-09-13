@@ -22,12 +22,12 @@ def process_video(video_id, video_path):
         object_key = video_path
 
         local_input_path = Path("/tmp") / Path(object_key).name
-        
         s3.download_file("videos", object_key, str(local_input_path))
         
-        publish_video_status(video_id=video_id, video_status="processing")
+        publish_video_status(video_id=video_id, video_status="processing", processed_video=None, thumbnail=None)
+        
+        
         filename = Path(object_key).stem
-
         local_output_path = Path("/tmp") / f"{filename}_720p.mp4"
         local_thumbnail_path = Path("/tmp") / f"{filename}_tb.jpg"
         
@@ -109,7 +109,7 @@ def process_video(video_id, video_path):
         local_output_path.unlink(missing_ok=True)
         local_thumbnail_path.unlink(missing_ok=True)
 
-        publish_video_status(video_id=video_id, video_status="completed")
+        publish_video_status(video_id=video_id, video_status="completed", processed_video=video_output_key, thumbnail=thumbnail_output_key)
 
         return {
             "video_id": str(video_id),
@@ -118,5 +118,5 @@ def process_video(video_id, video_path):
         }
         
     except:
-        publish_video_status(video_id=video_id, video_status="failed")   
+        publish_video_status(video_id=video_id, video_status="failed", processed_video=None, thumbnail=None)   
         raise     
