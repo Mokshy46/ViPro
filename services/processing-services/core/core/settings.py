@@ -136,5 +136,6 @@ MAILERS = {
     },
 }
 
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
 
-CELERY_BROKER_URL = "amqp://localhost:5672//"
+CELERY_BROKER_URL = f"amqp://{RABBITMQ_HOST}:5672//"

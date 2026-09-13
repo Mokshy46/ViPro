@@ -1,9 +1,12 @@
 import pika
-import json
+import json,os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def publish_video_job(video_id, video_path):
     
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv("RABBITMQ_HOST")))
 
     channel = connection.channel()
 

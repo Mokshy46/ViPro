@@ -5,7 +5,9 @@ from pathlib import Path
 from celery import shared_task
 from .rabbitmq import publish_video_status
 
+from dotenv import load_dotenv
 
+load_dotenv()
 
 s3 = boto3.client(
     "s3",

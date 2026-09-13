@@ -1,10 +1,10 @@
-import pika, json
+import pika, json,os
 
 
 
 def publish_video_status(video_id, video_status, processed_video, thumbnail):
     
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv("RABBITMQ_HOST")))
     
     channel = connection.channel()
     

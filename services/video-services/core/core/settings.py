@@ -129,10 +129,10 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
 
-CELERY_BROKER_URL = "amqp://localhost:5672//"
-CELERY_RESULT_BACKEND = "amqp://localhost:5672//"
-
+CELERY_BROKER_URL = f"amqp://{RABBITMQ_HOST}:5672//"
+CELERY_RESULT_BACKEND = f"amqp://{RABBITMQ_HOST}:5672//"
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration

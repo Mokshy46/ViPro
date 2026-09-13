@@ -1,8 +1,11 @@
 import pika, sys, os, json
 from .tasks import process_video
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def main():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv("RABBITMQ_HOST")))
     channel = connection.channel()
 
     channel.queue_declare(queue='video_processing', durable=True, arguments={'x-queue-type': 'quorum'})

@@ -1,5 +1,8 @@
 import os
 import django
+from dotenv import load_dotenv
+
+load_dotenv()
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 django.setup()
@@ -10,7 +13,7 @@ from .models import Video
 
 
 def main():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv("RABBITMQ_HOST")))
     channel = connection.channel()
 
     channel.queue_declare(queue='status', durable=True, arguments={'x-queue-type': 'quorum'})
