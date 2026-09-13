@@ -1,9 +1,10 @@
 import subprocess
-import boto3
+import boto3,os
 
 from pathlib import Path
 from celery import shared_task
 from .rabbitmq import publish_video_status
+import botocore.exceptions
 
 from dotenv import load_dotenv
 
@@ -11,21 +12,32 @@ load_dotenv()
 
 s3 = boto3.client(
     "s3",
-    endpoint_url="http://localhost:9000",
-    aws_access_key_id="minioadmin",
-    aws_secret_access_key="minioadmin",
+    endpoint_url=os.getenv("AWS_S3_ENDPOINT_URL"),
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
 )
 
-@shared_task
-def process_video(video_id, video_path):
+@shared_task(bind = True)
+def process_video(self,video_id, video_path):
 
-    try:
+    
         
         object_key = video_path
 
-        local_input_path = Path("/tmp") / Path(object_key).name
-        s3.download_file("videos", object_key, str(local_input_path))
-        
+        try:
+            local_input_path = Path("/tmp") / Path(object_key).name
+            s3.download_file("videos", object_key, str(local_input_path))
+            
+        except (botocore.exceptions.ClientError, botocore.exceptions.EndpointConnectionError) as error:
+
+            if self.request.retries < 3 :
+                self.retry(exc = error, countdown = 10, max_retries = 3)
+                
+            else:
+                publish_video_status(video_id=video_id, video_status="failed", processed_video=None, thumbnail=None)   
+                raise
+
+            
         publish_video_status(video_id=video_id, video_status="processing", processed_video=None, thumbnail=None)
         
         
@@ -71,6 +83,7 @@ def process_video(video_id, video_path):
             )
 
         if result.returncode != 0:
+            publish_video_status(video_id=video_id, video_status="failed", processed_video=None, thumbnail=None)   
             raise RuntimeError(f"FFmpeg failed:\n{result.stderr}")
 
 
@@ -99,14 +112,26 @@ def process_video(video_id, video_path):
             )
 
         if result.returncode != 0:
+            publish_video_status(video_id=video_id, video_status="failed", processed_video=None, thumbnail=None)   
             raise RuntimeError(f"Thumbnail generation failed:\n{result.stderr}")
 
 
-        s3.upload_file(str(local_output_path), "videos", video_output_key)
-        s3.upload_file(str(local_thumbnail_path), "videos", thumbnail_output_key)
-
+        try:
+            s3.upload_file(str(local_output_path), "videos", video_output_key)
+            s3.upload_file(str(local_thumbnail_path), "videos", thumbnail_output_key)
+            
+        except (botocore.exceptions.ClientError, botocore.exceptions.EndpointConnectionError) as error:
+            
+            if self.request.retries < 3 :
+                self.retry(exc = error, countdown = 10, max_retries = 3)
+                
+            else:
+                publish_video_status(video_id=video_id, video_status="failed", processed_video=None, thumbnail=None)   
+                raise
 
     
+
+
         local_input_path.unlink(missing_ok=True)
         local_output_path.unlink(missing_ok=True)
         local_thumbnail_path.unlink(missing_ok=True)
@@ -119,6 +144,5 @@ def process_video(video_id, video_path):
             "thumbnail": thumbnail_output_key,
         }
         
-    except:
-        publish_video_status(video_id=video_id, video_status="failed", processed_video=None, thumbnail=None)   
-        raise     
+        
+  
