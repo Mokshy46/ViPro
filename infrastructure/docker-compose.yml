@@ -6,21 +6,31 @@ services:
       - "5672:5672"
       - "15672:15672"
 
-
   minio:
-      image: quay.io/minio/minio
-      container_name: minio
-      command: server /data --console-address ":9001"
-      ports:
-        - "9000:9000"
-        - "9001:9001"
-      environment:
-        MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-        MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      volumes:
-        - minio_data:/data
+    image: quay.io/minio/minio
+    container_name: minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+
+  postgres:
+    image: postgres:18
+    container_name: postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./postgres/init:/docker-entrypoint-initdb.d
 
 volumes:
   minio_data:
-    external: true
-    name: 1d34d9b5b34d0b8439bae234e5a7a1650abf8d94059c4370555531d02c43093e
+  postgres_data:
